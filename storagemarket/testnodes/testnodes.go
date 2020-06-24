@@ -13,6 +13,7 @@ import (
 	"github.com/filecoin-project/specs-actors/actors/crypto"
 	"github.com/filecoin-project/specs-actors/actors/runtime/exitcode"
 	"github.com/ipfs/go-cid"
+	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-fil-markets/shared"
 	"github.com/filecoin-project/go-fil-markets/shared_testutil"
@@ -187,6 +188,8 @@ var _ storagemarket.StorageCommon = (*FakeCommonNode)(nil)
 type FakeClientNode struct {
 	FakeCommonNode
 	ClientAddr                 address.Address
+	MinerAddr                  address.Address
+	WorkerAddr                 address.Address
 	ValidationError            error
 	ValidatePublishedDealID    abi.DealID
 	ValidatePublishedError     error
@@ -194,6 +197,10 @@ type FakeClientNode struct {
 	OnDealExpiredError         error
 	OnDealSlashedError         error
 	OnDealSlashedEpoch         abi.ChainEpoch
+}
+
+func (n *FakeClientNode) SignBytes(ctx context.Context, signer address.Address, b []byte) (*crypto.Signature, error) {
+	return shared_testutil.MakeTestSignature(), nil
 }
 
 // ListClientDeals just returns the deals in the storage market state
