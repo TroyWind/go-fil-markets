@@ -37,7 +37,7 @@ const (
 	StorageDealSlashed
 
 	// StorageDealFailing means something has gone wrong in a deal. Once data is cleaned up the deal will
-	// finalize on StorateDealError
+	// finalize on StorageDealError
 	StorageDealFailing
 
 	// StorageDealFundsEnsured means we've deposited funds as neccesary to create a deal, ready to move forward

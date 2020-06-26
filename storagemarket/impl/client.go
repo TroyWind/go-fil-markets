@@ -439,19 +439,6 @@ func (c *Client) restartDeals() error {
 	}
 
 	for _, deal := range deals {
-		if c.statemachines.IsTerminated(deal) {
-			continue
-		}
-
-		if deal.ConnectionClosed {
-			continue
-		}
-
-		_, err := c.ensureDealStream(deal.Miner, deal.ProposalCid)
-		if err != nil {
-			return err
-		}
-
 		err = c.statemachines.Send(deal.ProposalCid, storagemarket.ClientEventRestart)
 		if err != nil {
 			return err
@@ -474,24 +461,6 @@ func (c *Client) dispatch(eventName fsm.EventName, deal fsm.StateType) {
 	if err := c.pubSub.Publish(pubSubEvt); err != nil {
 		log.Errorf("failed to publish event %d", evt)
 	}
-}
-
-func (c *Client) ensureDealStream(provider peer.ID, proposalCid cid.Cid) (network.StorageDealStream, error) {
-	s, err := c.conns.DealStream(proposalCid)
-	if err == nil {
-		return s, nil
-	}
-
-	s, err = c.net.NewDealStream(provider)
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.conns.AddStream(proposalCid, s)
-	if err != nil {
-		return nil, err
-	}
-	return s, nil
 }
 
 func (c *Client) verifyStatusResponseSignature(ctx context.Context, miner address.Address, response network.DealStatusResponse) (bool, error) {
@@ -551,44 +520,16 @@ type clientDealEnvironment struct {
 	c *Client
 }
 
+func (c *clientDealEnvironment) NewDealStream(p peer.ID) (network.StorageDealStream, error) {
+	return c.c.net.NewDealStream(p)
+}
+
+func (c *clientDealEnvironment) CloseDealStream(s network.StorageDealStream) error {
+	return s.Close()
+}
+
 func (c *clientDealEnvironment) Node() storagemarket.StorageClientNode {
 	return c.c.node
-}
-
-func (c *clientDealEnvironment) WriteDealProposal(p peer.ID, proposalCid cid.Cid, proposal network.Proposal) error {
-	s, err := c.c.ensureDealStream(p, proposalCid)
-	if err != nil {
-		return err
-	}
-
-	err = s.WriteDealProposal(proposal)
-	return err
-}
-
-func (c *clientDealEnvironment) ReadDealResponse(proposalCid cid.Cid) (network.SignedResponse, error) {
-	s, err := c.c.conns.DealStream(proposalCid)
-	if err != nil {
-		return network.SignedResponseUndefined, err
-	}
-	return s.ReadDealResponse()
-}
-
-func (c *clientDealEnvironment) TagConnection(proposalCid cid.Cid) error {
-	s, err := c.c.conns.DealStream(proposalCid)
-	if err != nil {
-		return err
-	}
-	s.TagProtectedConnection(proposalCid.String())
-	return nil
-}
-
-func (c *clientDealEnvironment) CloseStream(proposalCid cid.Cid) error {
-	s, err := c.c.conns.DealStream(proposalCid)
-	if err != nil {
-		return err
-	}
-	s.UntagProtectedConnection(proposalCid.String())
-	return c.c.conns.Disconnect(proposalCid)
 }
 
 func (c *clientDealEnvironment) StartDataTransfer(ctx context.Context, to peer.ID, voucher datatransfer.Voucher, baseCid cid.Cid, selector ipld.Node) error {
@@ -613,3 +554,5 @@ var ClientFSMParameterSpec = fsm.Parameters{
 	StateEntryFuncs: clientstates.ClientStateEntryFuncs,
 	FinalityStates:  clientstates.ClientFinalityStates,
 }
+
+var _ clientstates.ClientDealEnvironment = &clientDealEnvironment{}
