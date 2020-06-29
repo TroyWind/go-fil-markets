@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dstoragelog"
+	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-address"
 	datatransfer "github.com/filecoin-project/go-data-transfer"
@@ -116,10 +118,12 @@ func ValidateDealProposal(ctx fsm.Context, environment ProviderDealEnvironment, 
 func DecideOnProposal(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
 	accept, reason, err := environment.RunCustomDecisionLogic(ctx.Context(), deal)
 	if err != nil {
+		dstoragelog.L.Debug("custom deal decision logic failed", zap.Error(err))
 		return ctx.Trigger(storagemarket.ProviderEventNodeErrored, xerrors.Errorf("custom deal decision logic failed: %w", err))
 	}
 
 	if !accept {
+		dstoragelog.L.Debug("ProviderEventDealRejected", zap.String("reason", reason))
 		return ctx.Trigger(storagemarket.ProviderEventDealRejected, fmt.Errorf(reason))
 	}
 

@@ -2,6 +2,8 @@ package clientstates
 
 import (
 	"context"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dstoragelog"
+	"go.uber.org/zap"
 
 	datatransfer "github.com/filecoin-project/go-data-transfer"
 	"github.com/filecoin-project/go-statemachine/fsm"
@@ -106,6 +108,7 @@ func WaitingForDataRequest(ctx fsm.Context, environment ClientDealEnvironment, d
 	}
 
 	if resp.Response.State != storagemarket.StorageDealWaitingForData {
+		dstoragelog.L.Debug("ClientEventUnexpectedDealState", zap.Int("state", int(resp.Response.State)))
 		return ctx.Trigger(storagemarket.ClientEventUnexpectedDealState, resp.Response.State)
 	}
 
