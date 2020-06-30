@@ -1,4 +1,4 @@
-package dstoragelog
+package dfilmarketlog
 
 import (
 	"github.com/filecoin-project/go-fil-markets/tools/util"

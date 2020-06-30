@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/filecoin-project/go-fil-markets/tools/dlog/dstoragelog"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
 	"go.uber.org/zap"
 	"reflect"
 
@@ -54,7 +54,7 @@ type ProviderStateEntryFunc func(ctx fsm.Context, environment ProviderDealEnviro
 
 // ValidateDealProposal validates a proposed deal against the provider criteria
 func ValidateDealProposal(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("ValidateDealProposal")
+	dfilmarketlog.L.Debug("ValidateDealProposal")
 	tok, _, err := environment.Node().GetChainHead(ctx.Context())
 	if err != nil {
 		return ctx.Trigger(storagemarket.ProviderEventNodeErrored, xerrors.Errorf("getting most recent state id: %w", err))
@@ -118,15 +118,15 @@ func ValidateDealProposal(ctx fsm.Context, environment ProviderDealEnvironment, 
 // DecideOnProposal allows custom decision logic to run before accepting a deal, such as allowing a manual
 // operator to decide whether or not to accept the deal
 func DecideOnProposal(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("DecideOnProposal")
+	dfilmarketlog.L.Debug("DecideOnProposal")
 	accept, reason, err := environment.RunCustomDecisionLogic(ctx.Context(), deal)
 	if err != nil {
-		dstoragelog.L.Debug("custom deal decision logic failed", zap.Error(err))
+		dfilmarketlog.L.Debug("custom deal decision logic failed", zap.Error(err))
 		return ctx.Trigger(storagemarket.ProviderEventNodeErrored, xerrors.Errorf("custom deal decision logic failed: %w", err))
 	}
 
 	if !accept {
-		dstoragelog.L.Debug("ProviderEventDealRejected", zap.String("reason", reason))
+		dfilmarketlog.L.Debug("ProviderEventDealRejected", zap.String("reason", reason))
 		return ctx.Trigger(storagemarket.ProviderEventDealRejected, fmt.Errorf(reason))
 	}
 
@@ -146,7 +146,7 @@ func DecideOnProposal(ctx fsm.Context, environment ProviderDealEnvironment, deal
 // VerifyData verifies that data received for a deal matches the pieceCID
 // in the proposal
 func VerifyData(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("VerifyData")
+	dfilmarketlog.L.Debug("VerifyData")
 	pieceCid, piecePath, metadataPath, err := environment.GeneratePieceCommitmentToFile(deal.Ref.Root, shared.AllSelector())
 	if err != nil {
 		return ctx.Trigger(storagemarket.ProviderEventGeneratePieceCIDFailed, err)
@@ -161,7 +161,7 @@ func VerifyData(ctx fsm.Context, environment ProviderDealEnvironment, deal stora
 }
 
 func EnsureProviderFunds(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("EnsureProviderFunds")
+	dfilmarketlog.L.Debug("EnsureProviderFunds")
 	node := environment.Node()
 
 	tok, _, err := node.GetChainHead(ctx.Context())
@@ -189,7 +189,7 @@ func EnsureProviderFunds(ctx fsm.Context, environment ProviderDealEnvironment, d
 }
 
 func WaitForFunding(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("WaitForFunding")
+	dfilmarketlog.L.Debug("WaitForFunding")
 	node := environment.Node()
 
 	return node.WaitForMessage(ctx.Context(), *deal.AddFundsCid, func(code exitcode.ExitCode, bytes []byte, err error) error {
@@ -205,7 +205,7 @@ func WaitForFunding(ctx fsm.Context, environment ProviderDealEnvironment, deal s
 
 // PublishDeal sends a message to publish a deal on chain
 func PublishDeal(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("PublishDeal")
+	dfilmarketlog.L.Debug("PublishDeal")
 	smDeal := storagemarket.MinerDeal{
 		Client:             deal.Client,
 		ClientDealProposal: deal.ClientDealProposal,
@@ -224,9 +224,9 @@ func PublishDeal(ctx fsm.Context, environment ProviderDealEnvironment, deal stor
 
 // WaitForPublish waits for the publish message on chain and sends the deal id back to the client
 func WaitForPublish(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("WaitForPublish")
+	dfilmarketlog.L.Debug("WaitForPublish")
 	return environment.Node().WaitForMessage(ctx.Context(), *deal.PublishCid, func(code exitcode.ExitCode, retBytes []byte, err error) error {
-		dstoragelog.L.Debug("WaitForPublish exec func")
+		dfilmarketlog.L.Debug("WaitForPublish exec func")
 		if err != nil {
 			return ctx.Trigger(storagemarket.ProviderEventDealPublishError, xerrors.Errorf("PublishStorageDeals errored: %w", err))
 		}
@@ -260,7 +260,7 @@ func WaitForPublish(ctx fsm.Context, environment ProviderDealEnvironment, deal s
 
 // HandoffDeal hands off a published deal for sealing and commitment in a sector
 func HandoffDeal(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("HandoffDeal", zap.String("PiecePath", string(deal.PiecePath)), zap.String("file store", reflect.TypeOf(environment.FileStore()).String()))
+	dfilmarketlog.L.Debug("HandoffDeal", zap.String("PiecePath", string(deal.PiecePath)), zap.String("file store", reflect.TypeOf(environment.FileStore()).String()))
 	file, err := environment.FileStore().Open(deal.PiecePath)
 	if err != nil {
 		return ctx.Trigger(storagemarket.ProviderEventFileStoreErrored, xerrors.Errorf("reading piece at path %s: %w", deal.PiecePath, err))
@@ -288,7 +288,7 @@ func HandoffDeal(ctx fsm.Context, environment ProviderDealEnvironment, deal stor
 
 // VerifyDealActivated verifies that a deal has been committed to a sector and activated
 func VerifyDealActivated(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("VerifyDealActivated")
+	dfilmarketlog.L.Debug("VerifyDealActivated")
 	// TODO: consider waiting for seal to happen
 	cb := func(err error) {
 		if err != nil {
@@ -309,7 +309,7 @@ func VerifyDealActivated(ctx fsm.Context, environment ProviderDealEnvironment, d
 // RecordPieceInfo records sector information about an activated deal so that the data
 // can be retrieved later
 func RecordPieceInfo(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("RecordPieceInfo")
+	dfilmarketlog.L.Debug("RecordPieceInfo")
 	tok, _, err := environment.Node().GetChainHead(ctx.Context())
 	if err != nil {
 		return ctx.Trigger(storagemarket.ProviderEventUnableToLocatePiece, deal.DealID, err)
@@ -365,7 +365,7 @@ func RecordPieceInfo(ctx fsm.Context, environment ProviderDealEnvironment, deal 
 
 // FailDeal sends a failure response before terminating a deal
 func FailDeal(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("FailDeal")
+	dfilmarketlog.L.Debug("FailDeal")
 	log.Warnf("deal %s failed: %s", deal.ProposalCid, deal.Message)
 
 	if !deal.ConnectionClosed {

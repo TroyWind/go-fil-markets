@@ -3,7 +3,7 @@ package storageimpl
 import (
 	"context"
 	"fmt"
-	"github.com/filecoin-project/go-fil-markets/tools/dlog/dstoragelog"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
 
 	"github.com/filecoin-project/go-address"
 	cborutil "github.com/filecoin-project/go-cbor-util"
@@ -61,7 +61,7 @@ func NewClient(
 	ds datastore.Batching,
 	scn storagemarket.StorageClientNode,
 ) (*Client, error) {
-		dstoragelog.L.Debug("new storage market client")
+		dfilmarketlog.L.Debug("new storage market client")
 	carIO := cario.NewCarIO()
 	pio := pieceio.NewPieceIO(carIO, bs)
 

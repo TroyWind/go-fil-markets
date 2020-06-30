@@ -2,7 +2,7 @@ package pieceio
 
 import (
 	"context"
-	"github.com/filecoin-project/go-fil-markets/tools/dlog/dstoragelog"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
 	"go.uber.org/zap"
 	"io"
 	"os"
@@ -91,7 +91,7 @@ func (pio *pieceIO) GeneratePieceCommitment(rt abi.RegisteredSealProof, payloadC
 }
 
 func (pio *pieceIOWithStore) GeneratePieceCommitmentToFile(rt abi.RegisteredSealProof, payloadCid cid.Cid, selector ipld.Node, userOnNewCarBlocks ...car.OnNewCarBlockFunc) (cid.Cid, filestore.Path, abi.UnpaddedPieceSize, error) {
-	dstoragelog.L.Debug("GeneratePieceCommitmentToFile", zap.String("data cid", payloadCid.String()))
+	dfilmarketlog.L.Debug("GeneratePieceCommitmentToFile", zap.String("data cid", payloadCid.String()))
 	f, err := pio.store.CreateTemp()
 	if err != nil {
 		return cid.Undef, "", 0, err

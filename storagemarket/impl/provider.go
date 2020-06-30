@@ -2,7 +2,7 @@ package storageimpl
 
 import (
 	"context"
-	"github.com/filecoin-project/go-fil-markets/tools/dlog/dstoragelog"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
 	"io"
 
 	"github.com/filecoin-project/go-address"
@@ -112,7 +112,7 @@ func NewProvider(net network.StorageMarketNetwork,
 	storedAsk StoredAsk,
 	options ...StorageProviderOption,
 ) (storagemarket.StorageProvider, error) {
-	dstoragelog.L.Debug("new storage market NewProvider")
+	dfilmarketlog.L.Debug("new storage market NewProvider")
 	carIO := cario.NewCarIO()
 	pio := pieceio.NewPieceIOWithStore(carIO, fs, bs)
 
