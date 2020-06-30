@@ -161,7 +161,7 @@ func VerifyData(ctx fsm.Context, environment ProviderDealEnvironment, deal stora
 }
 
 func EnsureProviderFunds(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dfilmarketlog.L.Debug("EnsureProviderFunds")
+	dfilmarketlog.L.Debug("EnsureProviderFunds", zap.String("PiecePath", string(deal.PiecePath)), zap.String("MetadataPath", string(deal.MetadataPath)))
 	node := environment.Node()
 
 	tok, _, err := node.GetChainHead(ctx.Context())

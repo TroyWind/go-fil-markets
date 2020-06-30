@@ -102,8 +102,9 @@ func NewProvider(net network.StorageMarketNetwork,
 	ds datastore.Batching,
 	// 该bs就是staging DB
 	bs blockstore.Blockstore,
-	// piece file store
+	// piece file store（是用于缓存staging转换出来的piece，会被删除，就是lotusstorage目录）
 	fs filestore.FileStore,
+	// 真正保存 piece 的地方
 	pieceStore piecestore.PieceStore,
 	dataTransfer datatransfer.Manager,
 	spn storagemarket.StorageProviderNode,
