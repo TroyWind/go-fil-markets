@@ -100,7 +100,9 @@ func CustomDealDecisionLogic(decider DealDeciderFunc) StorageProviderOption {
 // NewProvider returns a new storage provider
 func NewProvider(net network.StorageMarketNetwork,
 	ds datastore.Batching,
+	// 该bs就是staging DB
 	bs blockstore.Blockstore,
+	// piece file store
 	fs filestore.FileStore,
 	pieceStore piecestore.PieceStore,
 	dataTransfer datatransfer.Manager,
