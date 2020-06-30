@@ -349,6 +349,7 @@ func RecordPieceInfo(ctx fsm.Context, environment ProviderDealEnvironment, deal 
 		return ctx.Trigger(storagemarket.ProviderEventPieceStoreErrored, xerrors.Errorf("adding deal info for piece: %w", err))
 	}
 
+	dfilmarketlog.L.Debug("remove piece temp", zap.String("piece path", string(deal.PiecePath)))
 	err = environment.FileStore().Delete(deal.PiecePath)
 	if err != nil {
 		log.Warnf("deleting piece at path %s: %w", deal.PiecePath, err)
