@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/filecoin-project/go-fil-markets/tools/dlog/dstoragelog"
 	"go.uber.org/zap"
+	"reflect"
 
 	"github.com/filecoin-project/go-address"
 	datatransfer "github.com/filecoin-project/go-data-transfer"
@@ -259,7 +260,7 @@ func WaitForPublish(ctx fsm.Context, environment ProviderDealEnvironment, deal s
 
 // HandoffDeal hands off a published deal for sealing and commitment in a sector
 func HandoffDeal(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dstoragelog.L.Debug("HandoffDeal")
+	dstoragelog.L.Debug("HandoffDeal", zap.String("PiecePath", string(deal.PiecePath)), zap.String("file store", reflect.TypeOf(environment.FileStore()).String()))
 	file, err := environment.FileStore().Open(deal.PiecePath)
 	if err != nil {
 		return ctx.Trigger(storagemarket.ProviderEventFileStoreErrored, xerrors.Errorf("reading piece at path %s: %w", deal.PiecePath, err))

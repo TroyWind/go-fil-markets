@@ -57,6 +57,7 @@ func EnsureClientFunds(ctx fsm.Context, environment ClientDealEnvironment, deal 
 	if mcid == cid.Undef {
 		return ctx.Trigger(storagemarket.ClientEventFundsEnsured)
 	}
+	dstoragelog.L.Debug("Trigger storagemarket.ClientEventFundingInitiated")
 
 	return ctx.Trigger(storagemarket.ClientEventFundingInitiated, mcid)
 }
