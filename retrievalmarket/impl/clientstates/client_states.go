@@ -29,6 +29,7 @@ func SetupPaymentChannelStart(ctx fsm.Context, environment ClientDealEnvironment
 		return ctx.Trigger(rm.ClientEventPaymentChannelErrored, err)
 	}
 
+	dretrievelog.L.Debug("SetupPaymentChannelStart", zap.String("deal.MinerWallet", deal.MinerWallet.String()))
 	paych, msgCID, err := environment.Node().GetOrCreatePaymentChannel(ctx.Context(), deal.ClientWallet, deal.MinerWallet, deal.TotalFunds, tok)
 	if err != nil {
 		return ctx.Trigger(rm.ClientEventPaymentChannelErrored, err)
