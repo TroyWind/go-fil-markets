@@ -142,7 +142,7 @@ func ProcessPaymentRequested(ctx fsm.Context, environment ClientDealEnvironment,
 
 // ProcessNextResponse reads and processes the next response from the provider
 func ProcessNextResponse(ctx fsm.Context, environment ClientDealEnvironment, deal rm.ClientDealState) error {
-	dfilmarketlog.L.Debug("ProcessNextResponse", zap.Uint64("deal.Status", uint64(deal.Status)))
+	dfilmarketlog.L.Debug("ProcessNextResponse（检索大文件时会触发）", zap.Uint64("deal.Status", uint64(deal.Status)), zap.String("total", deal.TotalFunds.String()), zap.Uint64("received", deal.TotalReceived))
 	// Read next response (or fail)
 	response, err := environment.DealStream(deal.ID).ReadDealResponse()
 	if err != nil {

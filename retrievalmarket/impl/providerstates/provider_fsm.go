@@ -2,6 +2,8 @@ package providerstates
 
 import (
 	"fmt"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dretrievelog"
+	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-statemachine/fsm"
 	"github.com/filecoin-project/specs-actors/actors/abi"
@@ -70,6 +72,7 @@ var ProviderEvents = fsm.Events{
 		From(rm.DealStatusBlocksComplete).To(rm.DealStatusFundsNeededLastPayment).
 		Action(func(deal *rm.ProviderDealState, totalSent uint64) error {
 			fmt.Println("Requesting payment")
+			dretrievelog.L.Debug("ProviderEventPaymentRequested", zap.Uint64("totalSent", totalSent))
 			deal.TotalSent = totalSent
 			return nil
 		}),
