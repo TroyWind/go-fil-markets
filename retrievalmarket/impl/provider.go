@@ -3,6 +3,8 @@ package retrievalimpl
 import (
 	"context"
 	"errors"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"go.uber.org/zap"
 	"reflect"
 	"sync"
 
@@ -306,6 +308,7 @@ func (p *Provider) NextBlock(ctx context.Context, id retrievalmarket.ProviderDea
 	if !ok {
 		return retrievalmarket.Block{}, false, errors.New("Could not read block")
 	}
+	dfilmarketlog.L.Debug("Provider NextBlock", zap.String("block id", id.String()))
 	return br.ReadBlock(ctx)
 }
 
@@ -317,6 +320,7 @@ func (p *Provider) GetPieceSize(c cid.Cid) (uint64, error) {
 	if len(pieceInfo.Deals) == 0 {
 		return 0, errors.New("Not enough piece info")
 	}
+	dfilmarketlog.L.Debug("GetPieceSize", zap.Uint64("PieceSize", pieceInfo.Deals[0].Length))
 	return pieceInfo.Deals[0].Length, nil
 }
 

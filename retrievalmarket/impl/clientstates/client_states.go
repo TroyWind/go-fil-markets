@@ -2,6 +2,8 @@ package clientstates
 
 import (
 	"context"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-statemachine/fsm"
@@ -64,6 +66,7 @@ func WaitForPaymentChannelAddFunds(ctx fsm.Context, environment ClientDealEnviro
 	if err != nil {
 		return ctx.Trigger(rm.ClientEventAllocateLaneErrored, err)
 	}
+	dfilmarketlog.L.Debug("WaitForPaymentChannelAddFunds", zap.String("PayCh", deal.PaymentInfo.PayCh.String()), zap.Uint64("Lane", deal.PaymentInfo.Lane))
 	return ctx.Trigger(rm.ClientEventPaymentChannelReady, deal.PaymentInfo.PayCh, lane)
 }
 
@@ -84,6 +87,7 @@ func ProposeDeal(ctx fsm.Context, environment ClientDealEnvironment, deal rm.Cli
 	case rm.DealStatusDealNotFound:
 		return ctx.Trigger(rm.ClientEventDealNotFound, response.Message)
 	case rm.DealStatusAccepted:
+		dfilmarketlog.L.Debug("ClientEventDealAccepted", zap.String("deal.PayloadCID", deal.PayloadCID.String()))
 		return ctx.Trigger(rm.ClientEventDealAccepted)
 	default:
 		return ctx.Trigger(rm.ClientEventUnknownResponseReceived)
@@ -122,6 +126,7 @@ func ProcessPaymentRequested(ctx fsm.Context, environment ClientDealEnvironment,
 		return ctx.Trigger(rm.ClientEventCreateVoucherFailed, err)
 	}
 
+	dfilmarketlog.L.Debug("ProcessPaymentRequested WriteDealPayment")
 	// send payment voucher (or fail)
 	err = environment.DealStream(deal.ID).WriteDealPayment(rm.DealPayment{
 		ID:             deal.DealProposal.ID,
@@ -137,6 +142,7 @@ func ProcessPaymentRequested(ctx fsm.Context, environment ClientDealEnvironment,
 
 // ProcessNextResponse reads and processes the next response from the provider
 func ProcessNextResponse(ctx fsm.Context, environment ClientDealEnvironment, deal rm.ClientDealState) error {
+	dfilmarketlog.L.Debug("ProcessNextResponse", zap.Uint64("deal.Status", uint64(deal.Status)))
 	// Read next response (or fail)
 	response, err := environment.DealStream(deal.ID).ReadDealResponse()
 	if err != nil {
@@ -196,6 +202,6 @@ func Finalize(ctx fsm.Context, environment ClientDealEnvironment, deal rm.Client
 	if response.Status != rm.DealStatusCompleted {
 		return ctx.Trigger(rm.ClientEventUnknownResponseReceived)
 	}
-
+	dfilmarketlog.L.Debug("Finalize ClientEventComplete")
 	return ctx.Trigger(rm.ClientEventComplete, uint64(0))
 }

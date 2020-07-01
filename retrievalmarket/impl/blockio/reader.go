@@ -3,6 +3,8 @@ package blockio
 import (
 	"bytes"
 	"context"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"go.uber.org/zap"
 	"io"
 
 	"github.com/ipld/go-ipld-prime"
@@ -52,6 +54,7 @@ func (sr *SelectorBlockReader) ReadBlock(ctx context.Context) (retrievalmarket.B
 		sr.traverser.Error(ctx, err)
 		return retrievalmarket.EmptyBlock, false, err
 	}
+	dfilmarketlog.L.Debug("load data to client", zap.Int("data len", len(buf.Bytes())))
 	block := retrievalmarket.Block{
 		Data:   buf.Bytes(),
 		Prefix: lnk.(cidlink.Link).Cid.Prefix().Bytes(),
