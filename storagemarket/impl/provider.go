@@ -2,6 +2,7 @@ package storageimpl
 
 import (
 	"context"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
 	"io"
 
 	"github.com/filecoin-project/go-address"
@@ -99,8 +100,11 @@ func CustomDealDecisionLogic(decider DealDeciderFunc) StorageProviderOption {
 // NewProvider returns a new storage provider
 func NewProvider(net network.StorageMarketNetwork,
 	ds datastore.Batching,
+	// 该bs就是staging DB
 	bs blockstore.Blockstore,
+	// piece file store（是用于缓存staging转换出来的piece，会被删除，就是lotusstorage目录）
 	fs filestore.FileStore,
+	// 真正保存 piece 的地方
 	pieceStore piecestore.PieceStore,
 	dataTransfer datatransfer.Manager,
 	spn storagemarket.StorageProviderNode,
@@ -109,6 +113,7 @@ func NewProvider(net network.StorageMarketNetwork,
 	storedAsk StoredAsk,
 	options ...StorageProviderOption,
 ) (storagemarket.StorageProvider, error) {
+	dfilmarketlog.L.Debug("new storage market NewProvider")
 	carIO := cario.NewCarIO()
 	pio := pieceio.NewPieceIOWithStore(carIO, fs, bs)
 

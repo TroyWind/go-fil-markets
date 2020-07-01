@@ -3,6 +3,8 @@ package providerstates
 import (
 	"context"
 	"errors"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-statemachine/fsm"
 	"github.com/filecoin-project/specs-actors/actors/abi"
@@ -97,6 +99,7 @@ func SendBlocks(ctx fsm.Context, environment ProviderDealEnvironment, deal rm.Pr
 	// send back response of blocks plus payment owed
 	paymentOwed := big.Mul(abi.NewTokenAmount(int64(totalSent-totalPaidFor)), deal.PricePerByte)
 
+	dfilmarketlog.L.Debug("SendBlocks", zap.String("paymentOwed", paymentOwed.String()), zap.String("deal.PricePerByte", deal.PricePerByte.String()))
 	err := environment.DealStream(deal.Identifier()).WriteDealResponse(rm.DealResponse{
 		ID:          deal.ID,
 		Status:      responseStatus,

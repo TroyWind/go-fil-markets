@@ -2,6 +2,8 @@ package retrievalimpl
 
 import (
 	"context"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"go.uber.org/zap"
 	"reflect"
 	"sync"
 
@@ -47,6 +49,7 @@ var _ retrievalmarket.RetrievalClient = &client{}
 // NewClient creates a new retrieval client
 func NewClient(
 	network rmnet.RetrievalMarketNetwork,
+	// 就是 client 目录
 	bs blockstore.Blockstore,
 	node retrievalmarket.RetrievalClientNode,
 	resolver retrievalmarket.PeerResolver,
@@ -110,6 +113,7 @@ func (c *client) Query(_ context.Context, p retrievalmarket.RetrievalPeer, paylo
 
 // Retrieve begins the process of requesting the data referred to by payloadCID, after a deal is accepted
 func (c *client) Retrieve(ctx context.Context, payloadCID cid.Cid, params retrievalmarket.Params, totalFunds abi.TokenAmount, miner peer.ID, clientWallet address.Address, minerWallet address.Address) (retrievalmarket.DealID, error) {
+	dfilmarketlog.L.Debug("Retrieve data", zap.String("cid", payloadCID.String()))
 	var err error
 	next, err := c.storedCounter.Next()
 	if err != nil {

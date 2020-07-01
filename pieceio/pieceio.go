@@ -2,6 +2,8 @@ package pieceio
 
 import (
 	"context"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"go.uber.org/zap"
 	"io"
 	"os"
 	"sync"
@@ -93,10 +95,12 @@ func (pio *pieceIOWithStore) GeneratePieceCommitmentToFile(rt abi.RegisteredSeal
 	if err != nil {
 		return cid.Undef, "", 0, err
 	}
+	dfilmarketlog.L.Debug("GeneratePieceCommitmentToFile", zap.String("data cid", payloadCid.String()), zap.String("f.Path()", string(f.Path())))
 	cleanup := func() {
 		f.Close()
 		_ = pio.store.Delete(f.Path())
 	}
+	// pio.bs 就是 staging，payloadCid 就是 datacid，f 就是 piece file store（temp）。这里就是将 staging 中的数据转换成 piece，temp文件类似 fstmp657539688
 	err = pio.carIO.WriteCar(context.Background(), pio.bs, payloadCid, selector, f, userOnNewCarBlocks...)
 	if err != nil {
 		cleanup()
