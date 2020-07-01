@@ -35,6 +35,7 @@ func SetupPaymentChannelStart(ctx fsm.Context, environment ClientDealEnvironment
 	}
 
 	if paych == address.Undef {
+		dretrievelog.L.Debug("SetupPaymentChannelStart paych == address.Undef", zap.String("msgCID", msgCID.String()))
 		return ctx.Trigger(rm.ClientEventPaymentChannelCreateInitiated, msgCID)
 	}
 
@@ -67,7 +68,7 @@ func WaitForPaymentChannelAddFunds(ctx fsm.Context, environment ClientDealEnviro
 	if err != nil {
 		return ctx.Trigger(rm.ClientEventAllocateLaneErrored, err)
 	}
-	dfilmarketlog.L.Debug("WaitForPaymentChannelAddFunds", zap.String("PayCh", deal.PaymentInfo.PayCh.String()), zap.Uint64("Lane", deal.PaymentInfo.Lane))
+	dretrievelog.L.Debug("WaitForPaymentChannelAddFunds", zap.String("PayCh", deal.PaymentInfo.PayCh.String()), zap.Uint64("Lane", deal.PaymentInfo.Lane))
 	return ctx.Trigger(rm.ClientEventPaymentChannelReady, deal.PaymentInfo.PayCh, lane)
 }
 
