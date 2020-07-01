@@ -57,11 +57,15 @@ var DefaultPricePerByte = abi.NewTokenAmount(2)
 
 // DefaultPaymentInterval is the baseline interval, set to 1Mb
 // if the miner does not explicitly set it otherwise
-var DefaultPaymentInterval = uint64(1 << 20)
+// todo reset
+//var DefaultPaymentInterval = uint64(1 << 20)
+var DefaultPaymentInterval = uint64(32)
 
 // DefaultPaymentIntervalIncrease is the amount interval increases on each payment,
 // set to to 1Mb if the miner does not explicitly set it otherwise
-var DefaultPaymentIntervalIncrease = uint64(1 << 20)
+// todo reset
+//var DefaultPaymentIntervalIncrease = uint64(1 << 20)
+var DefaultPaymentIntervalIncrease = uint64(32)
 
 // NewProvider returns a new retrieval Provider
 func NewProvider(minerAddress address.Address, node retrievalmarket.RetrievalProviderNode,
