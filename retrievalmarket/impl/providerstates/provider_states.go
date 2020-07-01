@@ -3,7 +3,7 @@ package providerstates
 import (
 	"context"
 	"errors"
-	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dretrievelog"
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-statemachine/fsm"
@@ -100,7 +100,7 @@ func SendBlocks(ctx fsm.Context, environment ProviderDealEnvironment, deal rm.Pr
 	paymentOwed := big.Mul(abi.NewTokenAmount(int64(totalSent-totalPaidFor)), deal.PricePerByte)
 
 	// 也就是一个 deal 才取一部分数据，如果数据量大，用户需要发多个deal
-	dfilmarketlog.L.Debug("SendBlocks", zap.String("paymentOwed", paymentOwed.String()), zap.String("deal.PricePerByte", deal.PricePerByte.String()), zap.String("deal.FundsReceived（上个deal已收到的数据）", deal.FundsReceived.String()), zap.Uint64("deal.CurrentInterval（当前取多少数据量）", deal.CurrentInterval))
+	dretrievelog.L.Debug("SendBlocks", zap.String("paymentOwed", paymentOwed.String()), zap.String("deal.PricePerByte", deal.PricePerByte.String()), zap.String("deal.FundsReceived（上个deal已收到的数据）", deal.FundsReceived.String()), zap.Uint64("deal.CurrentInterval（当前取多少数据量）", deal.CurrentInterval))
 	err := environment.DealStream(deal.Identifier()).WriteDealResponse(rm.DealResponse{
 		ID:          deal.ID,
 		Status:      responseStatus,

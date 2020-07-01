@@ -72,7 +72,7 @@ var ProviderEvents = fsm.Events{
 		From(rm.DealStatusBlocksComplete).To(rm.DealStatusFundsNeededLastPayment).
 		Action(func(deal *rm.ProviderDealState, totalSent uint64) error {
 			fmt.Println("Requesting payment")
-			dretrievelog.L.Debug("ProviderEventPaymentRequested", zap.Uint64("totalSent", totalSent))
+			dretrievelog.L.Debug("ProviderEventPaymentRequested", zap.Uint64("cur totalSent", totalSent), zap.Uint64("deal total sent", deal.TotalSent), zap.String("FundsReceived", deal.FundsReceived.String()))
 			deal.TotalSent = totalSent
 			return nil
 		}),
