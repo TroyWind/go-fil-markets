@@ -8,5 +8,5 @@ import (
 var L *zap.Logger
 
 func init() {
-	L = util.GetXDebugLog("retrieve")
+	L = util.GetXDebugLog("film-retrieve")
 }
