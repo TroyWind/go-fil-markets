@@ -260,7 +260,8 @@ func WaitForPublish(ctx fsm.Context, environment ProviderDealEnvironment, deal s
 
 // HandoffDeal hands off a published deal for sealing and commitment in a sector
 func HandoffDeal(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dfilmarketlog.L.Debug("HandoffDeal", zap.String("PiecePath", string(deal.PiecePath)), zap.String("file store", reflect.TypeOf(environment.FileStore()).String()))
+	dfilmarketlog.L.Debug("HandoffDeal", zap.String("PiecePath", string(deal.PiecePath)), zap.String("file store", reflect.TypeOf(environment.FileStore()).String()), zap.Uint64("deal id", uint64(deal.DealID)))
+
 	file, err := environment.FileStore().Open(deal.PiecePath)
 	if err != nil {
 		return ctx.Trigger(storagemarket.ProviderEventFileStoreErrored, xerrors.Errorf("reading piece at path %s: %w", deal.PiecePath, err))
