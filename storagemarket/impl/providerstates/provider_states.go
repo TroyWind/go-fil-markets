@@ -289,12 +289,14 @@ func HandoffDeal(ctx fsm.Context, environment ProviderDealEnvironment, deal stor
 
 // VerifyDealActivated verifies that a deal has been committed to a sector and activated
 func VerifyDealActivated(ctx fsm.Context, environment ProviderDealEnvironment, deal storagemarket.MinerDeal) error {
-	dfilmarketlog.L.Debug("VerifyDealActivated")
+	dfilmarketlog.L.Debug("VerifyDealActivated", zap.String("PiecePath", string(deal.PiecePath)))
 	// TODO: consider waiting for seal to happen
 	cb := func(err error) {
 		if err != nil {
+			dfilmarketlog.L.Debug("ProviderEventDealActivationFailed", zap.String("PiecePath", string(deal.PiecePath)), zap.Error(err))
 			_ = ctx.Trigger(storagemarket.ProviderEventDealActivationFailed, err)
 		} else {
+			dfilmarketlog.L.Debug("ProviderEventDealActivated", zap.String("PiecePath", string(deal.PiecePath)))
 			_ = ctx.Trigger(storagemarket.ProviderEventDealActivated)
 		}
 	}
@@ -302,6 +304,7 @@ func VerifyDealActivated(ctx fsm.Context, environment ProviderDealEnvironment, d
 	err := environment.Node().OnDealSectorCommitted(ctx.Context(), deal.Proposal.Provider, deal.DealID, cb)
 
 	if err != nil {
+		dfilmarketlog.L.Debug("ProviderEventDealActivationFailed", zap.String("PiecePath", string(deal.PiecePath)), zap.Error(err))
 		return ctx.Trigger(storagemarket.ProviderEventDealActivationFailed, err)
 	}
 	return nil

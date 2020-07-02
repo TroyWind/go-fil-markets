@@ -187,20 +187,20 @@ func ValidateDealPublished(ctx fsm.Context, environment ClientDealEnvironment, d
 // VerifyDealActivated confirms that a deal was successfully committed to a sector and is active
 func VerifyDealActivated(ctx fsm.Context, environment ClientDealEnvironment, deal storagemarket.ClientDeal) error {
 	dealID := uint64(deal.DealID)
-	dfilmarketlog.L.Debug("VerifyDealActivated", zap.Uint64("DealID", dealID))
+	dfilmarketlog.L.Debug("client VerifyDealActivated", zap.Uint64("DealID", dealID))
 
 	cb := func(err error) {
 		if err != nil {
-			dfilmarketlog.L.Debug("ClientEventDealActivationFailed", zap.Uint64("DealID", dealID), zap.Error(err))
+			dfilmarketlog.L.Debug("client ClientEventDealActivationFailed", zap.Uint64("DealID", dealID), zap.Error(err))
 			_ = ctx.Trigger(storagemarket.ClientEventDealActivationFailed, err)
 		} else {
-			dfilmarketlog.L.Debug("ClientEventDealActivated", zap.Uint64("DealID", dealID))
+			dfilmarketlog.L.Debug("client ClientEventDealActivated", zap.Uint64("DealID", dealID))
 			_ = ctx.Trigger(storagemarket.ClientEventDealActivated)
 		}
 	}
 
 	if err := environment.Node().OnDealSectorCommitted(ctx.Context(), deal.Proposal.Provider, deal.DealID, cb); err != nil {
-		dfilmarketlog.L.Debug("ClientEventDealActivationFailed", zap.Uint64("DealID", dealID), zap.Error(err))
+		dfilmarketlog.L.Debug("client ClientEventDealActivationFailed", zap.Uint64("DealID", dealID), zap.Error(err))
 		return ctx.Trigger(storagemarket.ClientEventDealActivationFailed, err)
 	}
 
