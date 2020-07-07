@@ -3,6 +3,7 @@ package network
 import (
 	"bufio"
 	"context"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
 
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/libp2p/go-libp2p-core/host"
@@ -37,6 +38,7 @@ func (impl *libp2pRetrievalMarketNetwork) NewQueryStream(id peer.ID) (RetrievalQ
 }
 
 func (impl *libp2pRetrievalMarketNetwork) NewDealStream(id peer.ID) (RetrievalDealStream, error) {
+	dfilmarketlog.L.Debug("New Retrieval Deal Stream")
 	s, err := impl.host.NewStream(context.Background(), id, retrievalmarket.ProtocolID)
 	if err != nil {
 		return nil, err
