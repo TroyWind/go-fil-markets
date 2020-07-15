@@ -2,6 +2,9 @@ package clientstates
 
 import (
 	"context"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dretrievelog"
+	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-statemachine/fsm"
@@ -30,12 +33,14 @@ func SetupPaymentChannelStart(ctx fsm.Context, environment ClientDealEnvironment
 		return ctx.Trigger(rm.ClientEventPaymentChannelErrored, err)
 	}
 
+	dretrievelog.L.Debug("SetupPaymentChannelStart", zap.String("deal.MinerWallet", deal.MinerWallet.String()))
 	paych, msgCID, err := environment.Node().GetOrCreatePaymentChannel(ctx.Context(), deal.ClientWallet, deal.MinerWallet, deal.TotalFunds, tok)
 	if err != nil {
 		return ctx.Trigger(rm.ClientEventPaymentChannelErrored, err)
 	}
 
 	if paych == address.Undef {
+		dretrievelog.L.Debug("SetupPaymentChannelStart paych == address.Undef", zap.String("msgCID", msgCID.String()))
 		return ctx.Trigger(rm.ClientEventPaymentChannelCreateInitiated, msgCID)
 	}
 
@@ -68,6 +73,7 @@ func WaitForPaymentChannelAddFunds(ctx fsm.Context, environment ClientDealEnviro
 	if err != nil {
 		return ctx.Trigger(rm.ClientEventAllocateLaneErrored, err)
 	}
+	dretrievelog.L.Debug("WaitForPaymentChannelAddFunds", zap.String("PayCh", deal.PaymentInfo.PayCh.String()), zap.Uint64("Lane", deal.PaymentInfo.Lane))
 	return ctx.Trigger(rm.ClientEventPaymentChannelReady, deal.PaymentInfo.PayCh, lane)
 }
 
@@ -88,6 +94,7 @@ func ProposeDeal(ctx fsm.Context, environment ClientDealEnvironment, deal rm.Cli
 	case rm.DealStatusDealNotFound:
 		return ctx.Trigger(rm.ClientEventDealNotFound, response.Message)
 	case rm.DealStatusAccepted:
+		dfilmarketlog.L.Debug("ClientEventDealAccepted", zap.String("deal.PayloadCID", deal.PayloadCID.String()))
 		return ctx.Trigger(rm.ClientEventDealAccepted)
 	default:
 		return ctx.Trigger(rm.ClientEventUnknownResponseReceived)
@@ -126,6 +133,7 @@ func ProcessPaymentRequested(ctx fsm.Context, environment ClientDealEnvironment,
 		return ctx.Trigger(rm.ClientEventCreateVoucherFailed, err)
 	}
 
+	dfilmarketlog.L.Debug("ProcessPaymentRequested WriteDealPayment")
 	// send payment voucher (or fail)
 	err = environment.DealStream(deal.ID).WriteDealPayment(rm.DealPayment{
 		ID:             deal.DealProposal.ID,
@@ -141,6 +149,7 @@ func ProcessPaymentRequested(ctx fsm.Context, environment ClientDealEnvironment,
 
 // ProcessNextResponse reads and processes the next response from the provider
 func ProcessNextResponse(ctx fsm.Context, environment ClientDealEnvironment, deal rm.ClientDealState) error {
+	dretrievelog.L.Debug("ProcessNextResponse（检索大文件时会多次触发）", zap.Uint64("deal.Status", uint64(deal.Status)), zap.String("total", deal.TotalFunds.String()), zap.Uint64("received", deal.TotalReceived))
 	// Read next response (or fail)
 	response, err := environment.DealStream(deal.ID).ReadDealResponse()
 	if err != nil {
@@ -200,6 +209,6 @@ func Finalize(ctx fsm.Context, environment ClientDealEnvironment, deal rm.Client
 	if response.Status != rm.DealStatusCompleted {
 		return ctx.Trigger(rm.ClientEventUnknownResponseReceived)
 	}
-
+	dfilmarketlog.L.Debug("Finalize ClientEventComplete")
 	return ctx.Trigger(rm.ClientEventComplete, uint64(0))
 }

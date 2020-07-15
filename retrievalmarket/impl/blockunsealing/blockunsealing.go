@@ -6,6 +6,8 @@ package blockunsealing
 import (
 	"bytes"
 	"context"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"go.uber.org/zap"
 	"io"
 
 	"github.com/ipfs/go-cid"
@@ -52,6 +54,7 @@ func (lu *loaderWithUnsealing) Load(lnk ipld.Link, lnkCtx ipld.LinkContext) (io.
 	if err != nil {
 		return nil, xerrors.Errorf("attempting to load cid from blockstore: %w", err)
 	}
+	dfilmarketlog.L.Debug("load from block store(staging)", zap.String("cid", c.String()), zap.Bool("has", has))
 
 	// attempt unseal if block is not in blockstore
 	if !has {
@@ -74,6 +77,7 @@ func (lu *loaderWithUnsealing) attemptUnseal(c cid.Cid) error {
 	var reader io.Reader
 	var cidInfo piecestore.CIDInfo
 
+	dfilmarketlog.L.Debug("attemptUnseal to staging", zap.String("cid", c.String()))
 	// if the deal proposal specified a Piece CID, only check that piece
 	if lu.pieceCid != nil {
 		reader, err = lu.firstSuccessfulUnsealByPieceCID(*lu.pieceCid)

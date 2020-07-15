@@ -2,6 +2,8 @@ package retrievalimpl
 
 import (
 	"context"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"go.uber.org/zap"
 	"reflect"
 	"sync"
 
@@ -50,6 +52,7 @@ var _ retrievalmarket.RetrievalClient = &Client{}
 // NewClient creates a new retrieval client
 func NewClient(
 	network rmnet.RetrievalMarketNetwork,
+	// 就是 client 目录
 	bs blockstore.Blockstore,
 	node retrievalmarket.RetrievalClientNode,
 	resolver retrievalmarket.PeerResolver,
@@ -149,6 +152,7 @@ From then on, the statemachine controls the deal flow in the client. Other compo
 Documentation of the client state machine can be found at https://godoc.org/github.com/filecoin-project/go-fil-markets/retrievalmarket/impl/clientstates
 */
 func (c *Client) Retrieve(ctx context.Context, payloadCID cid.Cid, params retrievalmarket.Params, totalFunds abi.TokenAmount, miner peer.ID, clientWallet address.Address, minerWallet address.Address) (retrievalmarket.DealID, error) {
+	dfilmarketlog.L.Debug("Retrieve data", zap.String("cid", payloadCID.String()))
 	var err error
 	next, err := c.storedCounter.Next()
 	if err != nil {

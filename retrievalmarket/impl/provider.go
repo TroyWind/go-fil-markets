@@ -3,6 +3,8 @@ package retrievalimpl
 import (
 	"context"
 	"errors"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
+	"go.uber.org/zap"
 	"reflect"
 	"sync"
 
@@ -61,11 +63,15 @@ var DefaultPricePerByte = abi.NewTokenAmount(2)
 
 // DefaultPaymentInterval is the baseline interval, set to 1Mb
 // if the miner does not explicitly set it otherwise
-var DefaultPaymentInterval = uint64(1 << 20)
+// todo reset
+//var DefaultPaymentInterval = uint64(1 << 20)
+var DefaultPaymentInterval = uint64(32)
 
 // DefaultPaymentIntervalIncrease is the amount interval increases on each payment,
 // set to to 1Mb if the miner does not explicitly set it otherwise
-var DefaultPaymentIntervalIncrease = uint64(1 << 20)
+// todo reset
+//var DefaultPaymentIntervalIncrease = uint64(1 << 20)
+var DefaultPaymentIntervalIncrease = uint64(32)
 
 // DealDeciderOpt sets a custom protocol
 func DealDeciderOpt(dd DealDecider) RetrievalProviderOption {
@@ -371,6 +377,7 @@ func (p *providerDealEnvironment) NextBlock(ctx context.Context, id retrievalmar
 	if !ok {
 		return retrievalmarket.Block{}, false, errors.New("Could not read block")
 	}
+	dfilmarketlog.L.Debug("Provider NextBlock", zap.String("block id", id.String()))
 	return br.ReadBlock(ctx)
 }
 
@@ -386,6 +393,7 @@ func (p *providerDealEnvironment) GetPieceSize(c cid.Cid, pieceCID *cid.Cid) (ui
 	if len(pieceInfo.Deals) == 0 {
 		return 0, errors.New("Not enough piece info")
 	}
+	dfilmarketlog.L.Debug("GetPieceSize", zap.Uint64("PieceSize", pieceInfo.Deals[0].Length))
 	return pieceInfo.Deals[0].Length, nil
 }
 

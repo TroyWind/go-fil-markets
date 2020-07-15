@@ -3,6 +3,7 @@ package clientstates
 import (
 	"context"
 	"time"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
 
 	datatransfer "github.com/filecoin-project/go-data-transfer"
 	"github.com/filecoin-project/go-statemachine/fsm"
@@ -14,10 +15,7 @@ import (
 	"github.com/libp2p/go-libp2p-core/peer"
 	"golang.org/x/xerrors"
 
-	"github.com/filecoin-project/go-fil-markets/shared"
 	"github.com/filecoin-project/go-fil-markets/storagemarket"
-	"github.com/filecoin-project/go-fil-markets/storagemarket/impl/clientutils"
-	"github.com/filecoin-project/go-fil-markets/storagemarket/impl/requestvalidation"
 	"github.com/filecoin-project/go-fil-markets/storagemarket/network"
 )
 
@@ -38,6 +36,7 @@ type ClientStateEntryFunc func(ctx fsm.Context, environment ClientDealEnvironmen
 
 // EnsureClientFunds attempts to ensure the client has enough funds for the deal being proposed
 func EnsureClientFunds(ctx fsm.Context, environment ClientDealEnvironment, deal storagemarket.ClientDeal) error {
+	dfilmarketlog.L.Debug("EnsureClientFunds")
 	node := environment.Node()
 
 	tok, _, err := node.GetChainHead(ctx.Context())
@@ -55,12 +54,14 @@ func EnsureClientFunds(ctx fsm.Context, environment ClientDealEnvironment, deal 
 	if mcid == cid.Undef {
 		return ctx.Trigger(storagemarket.ClientEventFundsEnsured)
 	}
+	dfilmarketlog.L.Debug("Trigger storagemarket.ClientEventFundingInitiated")
 
 	return ctx.Trigger(storagemarket.ClientEventFundingInitiated, mcid)
 }
 
 // WaitForFunding waits for an AddFunds message to appear on the chain
 func WaitForFunding(ctx fsm.Context, environment ClientDealEnvironment, deal storagemarket.ClientDeal) error {
+	dfilmarketlog.L.Debug("WaitForFunding")
 	node := environment.Node()
 
 	return node.WaitForMessage(ctx.Context(), *deal.AddFundsCid, func(code exitcode.ExitCode, bytes []byte, err error) error {
@@ -77,6 +78,7 @@ func WaitForFunding(ctx fsm.Context, environment ClientDealEnvironment, deal sto
 
 // ProposeDeal sends the deal proposal to the provider
 func ProposeDeal(ctx fsm.Context, environment ClientDealEnvironment, deal storagemarket.ClientDeal) error {
+	dfilmarketlog.L.Debug("ProposeDeal")
 	proposal := network.Proposal{
 		DealProposal:  &deal.ClientDealProposal,
 		Piece:         deal.DataRef,
@@ -184,7 +186,7 @@ func waitAgain(ctx fsm.Context, environment ClientDealEnvironment, pollError boo
 
 // ValidateDealPublished confirms with the chain that a deal was published
 func ValidateDealPublished(ctx fsm.Context, environment ClientDealEnvironment, deal storagemarket.ClientDeal) error {
-
+	dfilmarketlog.L.Debug("ValidateDealPublished")
 	dealID, err := environment.Node().ValidatePublishedDeal(ctx.Context(), deal)
 	if err != nil {
 		return ctx.Trigger(storagemarket.ClientEventDealPublishFailed, err)
@@ -195,15 +197,21 @@ func ValidateDealPublished(ctx fsm.Context, environment ClientDealEnvironment, d
 
 // VerifyDealActivated confirms that a deal was successfully committed to a sector and is active
 func VerifyDealActivated(ctx fsm.Context, environment ClientDealEnvironment, deal storagemarket.ClientDeal) error {
+	dealID := uint64(deal.DealID)
+	dfilmarketlog.L.Debug("client VerifyDealActivated", zap.Uint64("DealID", dealID))
+
 	cb := func(err error) {
 		if err != nil {
+			dfilmarketlog.L.Debug("client ClientEventDealActivationFailed", zap.Uint64("DealID", dealID), zap.Error(err))
 			_ = ctx.Trigger(storagemarket.ClientEventDealActivationFailed, err)
 		} else {
+			dfilmarketlog.L.Debug("client ClientEventDealActivated", zap.Uint64("DealID", dealID))
 			_ = ctx.Trigger(storagemarket.ClientEventDealActivated)
 		}
 	}
 
 	if err := environment.Node().OnDealSectorCommitted(ctx.Context(), deal.Proposal.Provider, deal.DealID, cb); err != nil {
+		dfilmarketlog.L.Debug("client ClientEventDealActivationFailed", zap.Uint64("DealID", dealID), zap.Error(err))
 		return ctx.Trigger(storagemarket.ClientEventDealActivationFailed, err)
 	}
 

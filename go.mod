@@ -40,6 +40,7 @@ require (
 	github.com/multiformats/go-multihash v0.0.13
 	github.com/stretchr/testify v1.5.1
 	github.com/whyrusleeping/cbor-gen v0.0.0-20200414195334-429a0b5e922e
+	go.uber.org/zap v1.13.0
 	golang.org/x/exp v0.0.0-20190121172915-509febef88a4
 	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543

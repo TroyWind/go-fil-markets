@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
 
 	"github.com/filecoin-project/go-address"
 	cborutil "github.com/filecoin-project/go-cbor-util"
@@ -76,6 +77,7 @@ func NewClient(
 	scn storagemarket.StorageClientNode,
 	options ...StorageClientOption,
 ) (*Client, error) {
+		dfilmarketlog.L.Debug("new storage market client")
 	carIO := cario.NewCarIO()
 	pio := pieceio.NewPieceIO(carIO, bs)
 
