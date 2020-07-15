@@ -2,6 +2,10 @@ package clientstates
 
 import (
 	"context"
+	"github.com/filecoin-project/go-fil-markets/shared"
+	"github.com/filecoin-project/go-fil-markets/storagemarket/impl/clientutils"
+	"github.com/filecoin-project/go-fil-markets/storagemarket/impl/requestvalidation"
+	"go.uber.org/zap"
 	"time"
 	"github.com/filecoin-project/go-fil-markets/tools/dlog/dfilmarketlog"
 
